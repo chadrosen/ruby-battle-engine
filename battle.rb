@@ -5,6 +5,9 @@ OPPONENT_POINTS = 60
 MAX_ROUNDS      = 300
 HP_PER_CON      = 20
 DR_PER_AGI      = 0.5
+DAMAGE_CAP      = 40          # max raw damage per normal hit
+CRIT_CHANCE     = 0.10        # 10% chance of a critical hit
+CRIT_CAP        = (DAMAGE_CAP * 1.5).floor  # crits bypass normal cap, up to 60
 
 OPPONENT_ARCHETYPES = {
   'brawler'    => { 'str' => 0.60, 'agi' => 0.10, 'con' => 0.30 },
@@ -37,6 +40,16 @@ def generate_opponent(archetype_name)
   make_character(str: stats['str'], agi: stats['agi'], con: stats['con'])
 end
 
+def attack(attacker, defender, rng)
+  raw = attacker[:str]
+  if rng.rand < CRIT_CHANCE
+    raw = [raw, CRIT_CAP].min   # crit: bypasses normal cap, up to CRIT_CAP
+  else
+    raw = [raw, DAMAGE_CAP].min # normal hit: hard cap
+  end
+  [raw - defender[:dr] + rng.rand(-1..1), 0].max
+end
+
 def tournament(player, seed: 42)
   opponents = OPPONENT_ARCHETYPES.keys.map { |name| generate_opponent(name) }
   rng = Random.new(seed)
@@ -48,8 +61,8 @@ def tournament(player, seed: 42)
     rounds = 0
     while a_hp > 0 && b_hp > 0 && rounds < MAX_ROUNDS
       rounds += 1
-      a_takes = [opp[:str] - player[:dr] + rng.rand(-1..1), 0].max
-      b_takes = [player[:str] - opp[:dr] + rng.rand(-1..1), 0].max
+      a_takes = attack(opp, player, rng)
+      b_takes = attack(player, opp, rng)
       a_hp -= a_takes
       b_hp -= b_takes
     end
@@ -73,8 +86,8 @@ if __FILE__ == $0
     puts "  ruby battle.rb <str> <agi> <con> --simulate"
     puts "  ruby battle.rb <str> <agi> <con> [seed]"
     puts ""
-    puts "Player budget: #{PLAYER_POINTS} points (str + agi + con must equal #{PLAYER_POINTS}, min 1 each)"
-    puts "Opponents: #{OPPONENT_ARCHETYPES.keys.join(', ')}"
+    puts "Player budget: #{PLAYER_POINTS} points (str + agi + con = #{PLAYER_POINTS}, min 1 each)"
+    puts "Damage cap: #{DAMAGE_CAP} per normal hit, #{CRIT_CAP} on crits (#{(CRIT_CHANCE*100).to_i}% chance)"
     exit 1
   end
 
