@@ -120,7 +120,7 @@ end
 
 def simulate_tournament(char_a, level:, seeds: (1..100).to_a)
   results = seeds.map { |s| tournament(char_a, level: level, seed: s) }
-  wins = results.count { |r| r['winner'] == 'a' }
+  wins = results.count { |r| r[:winner] == 'a' }
 
   {
     simulations: seeds.size,
