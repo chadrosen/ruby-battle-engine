@@ -1,11 +1,11 @@
 {
+  "opponents": ["brawler", "sentinel", "juggernaut", "assassin", "paladin"],
   "rules": {
     "hp_per_con": 20,
     "dr_per_agi": 0.5,
     "damage_variance": 1,
     "max_rounds": 300,
     "player_points": 100,
-    "opponent_points": 60,
     "damage_cap": 40,
     "crit_chance": 0.10,
     "crit_cap": 60

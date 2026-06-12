@@ -1,59 +1,55 @@
 require 'json'
 
-PLAYER_POINTS   = 100
-OPPONENT_POINTS = 60
-MAX_ROUNDS      = 300
-HP_PER_CON      = 20
-DR_PER_AGI      = 0.5
-DAMAGE_CAP      = 40          # max raw damage per normal hit
-CRIT_CHANCE     = 0.10        # 10% chance of a critical hit
-CRIT_CAP        = (DAMAGE_CAP * 1.5).floor  # crits bypass normal cap, up to 60
+PLAYER_POINTS = 100
+MAX_ROUNDS    = 300
+HP_PER_CON    = 20
+DR_PER_AGI    = 0.5
+DAMAGE_CAP    = 40
+CRIT_CHANCE   = 0.10
+CRIT_CAP      = (DAMAGE_CAP * 1.5).floor  # 60
 
-OPPONENT_ARCHETYPES = {
-  'brawler'    => { 'str' => 0.60, 'agi' => 0.10, 'con' => 0.30 },
-  'sentinel'   => { 'str' => 0.20, 'agi' => 0.60, 'con' => 0.20 },
-  'juggernaut' => { 'str' => 0.25, 'agi' => 0.15, 'con' => 0.60 },
-  'assassin'   => { 'str' => 0.75, 'agi' => 0.15, 'con' => 0.10 },
-  'paladin'    => { 'str' => 0.34, 'agi' => 0.33, 'con' => 0.33 },
-}.freeze
+# Opponent stats loaded from compiled binary — not human-readable in the container.
+# Use `ruby battle.rb <opp1> <opp2> --simulate` to probe matchups instead.
+OPPONENTS = Marshal.load(File.read(File.join(__dir__, 'opponents.dat'))).freeze
 
-def allocate_points(weights, total)
-  stats = %w[str agi con]
-  ideal = stats.map { |s| weights[s].to_f * total }
-  alloc = ideal.map { |v| [v.floor, 1].max }
-  leftover = total - alloc.sum
-  if leftover > 0
-    order = stats.each_index.sort_by { |i| -(ideal[i] - ideal[i].floor) }
-    order.first(leftover).each { |i| alloc[i] += 1 }
-  end
-  stats.zip(alloc).to_h
-end
+OPPONENT_NAMES = OPPONENTS.keys.freeze
 
 def make_character(str:, agi:, con:)
   { str: str, agi: agi, con: con, hp: con * HP_PER_CON, dr: agi * DR_PER_AGI }
 end
 
-def generate_opponent(archetype_name)
-  weights = OPPONENT_ARCHETYPES[archetype_name]
-  raise "Unknown opponent archetype: #{archetype_name}" unless weights
-  stats = allocate_points(weights, OPPONENT_POINTS)
-  make_character(str: stats['str'], agi: stats['agi'], con: stats['con'])
-end
-
 def attack(attacker, defender, rng)
   raw = attacker[:str]
-  if rng.rand < CRIT_CHANCE
-    raw = [raw, CRIT_CAP].min   # crit: bypasses normal cap, up to CRIT_CAP
-  else
-    raw = [raw, DAMAGE_CAP].min # normal hit: hard cap
-  end
+  raw = rng.rand < CRIT_CHANCE ? [raw, CRIT_CAP].min : [raw, DAMAGE_CAP].min
   [raw - defender[:dr] + rng.rand(-1..1), 0].max
 end
 
-def tournament(player, seed: 42)
-  opponents = OPPONENT_ARCHETYPES.keys.map { |name| generate_opponent(name) }
+def single_battle(char_a, char_b, seed: 42)
   rng = Random.new(seed)
-  bracket = opponents.shuffle(random: rng)
+  a_hp = char_a[:hp].to_f
+  b_hp = char_b[:hp].to_f
+  rounds = 0
+  while a_hp > 0 && b_hp > 0 && rounds < MAX_ROUNDS
+    rounds += 1
+    a_takes = attack(char_b, char_a, rng)
+    b_takes = attack(char_a, char_b, rng)
+    a_hp -= a_takes
+    b_hp -= b_takes
+  end
+  { winner: a_hp > b_hp ? 'a' : 'b', rounds: rounds, a_hp: a_hp.round(1), b_hp: b_hp.round(1) }
+end
+
+def simulate_matchup(char_a, char_b, seeds: (1..100).to_a)
+  results = seeds.map { |s| single_battle(char_a, char_b, seed: s) }
+  wins_a = results.count { |r| r[:winner] == 'a' }
+  { simulations: seeds.size, wins_a: wins_a, wins_b: seeds.size - wins_a,
+    win_pct_a: (wins_a.to_f / seeds.size * 100).round(1),
+    win_pct_b: ((seeds.size - wins_a).to_f / seeds.size * 100).round(1) }
+end
+
+def tournament(player, seed: 42)
+  rng = Random.new(seed)
+  bracket = OPPONENTS.values.shuffle(random: rng)
   a_hp = player[:hp].to_f
   fights = []
   bracket.each do |opp|
@@ -70,7 +66,7 @@ def tournament(player, seed: 42)
     fights << { winner: winner, player_hp_after: a_hp.round(1), rounds: rounds }
     break if winner != 'player'
   end
-  won_all = fights.length == opponents.length && fights.all? { |f| f[:winner] == 'player' }
+  won_all = fights.length == OPPONENTS.size && fights.all? { |f| f[:winner] == 'player' }
   { winner: won_all ? 'player' : 'opponent', fights_completed: fights.length, final_player_hp: a_hp.round(1) }
 end
 
@@ -81,23 +77,39 @@ def simulate_tournament(player, seeds: (1..100).to_a)
 end
 
 if __FILE__ == $0
-  if ARGV.length < 3
+  if ARGV.length < 2
     puts "Usage:"
-    puts "  ruby battle.rb <str> <agi> <con> --simulate"
-    puts "  ruby battle.rb <str> <agi> <con> [seed]"
+    puts "  ruby battle.rb <opp1> <opp2> --simulate       # probe opponent matchup"
+    puts "  ruby battle.rb <opp1> <opp2> [seed]           # single opponent battle"
+    puts "  ruby battle.rb <str> <agi> <con> --simulate   # player vs tournament"
+    puts "  ruby battle.rb <str> <agi> <con> [seed]       # single tournament run"
     puts ""
+    puts "Opponents: #{OPPONENT_NAMES.join(', ')}"
     puts "Player budget: #{PLAYER_POINTS} points (str + agi + con = #{PLAYER_POINTS}, min 1 each)"
-    puts "Damage cap: #{DAMAGE_CAP} per normal hit, #{CRIT_CAP} on crits (#{(CRIT_CHANCE*100).to_i}% chance)"
     exit 1
   end
 
-  s, a, c = ARGV[0].to_i, ARGV[1].to_i, ARGV[2].to_i
-  player = make_character(str: s, agi: a, con: c)
-
-  if ARGV.include?('--simulate')
-    puts JSON.pretty_generate(simulate_tournament(player))
+  if OPPONENT_NAMES.include?(ARGV[0])
+    # Opponent vs opponent mode
+    name_a, name_b = ARGV[0], ARGV[1]
+    raise "Unknown opponent: #{name_b}" unless OPPONENT_NAMES.include?(name_b)
+    char_a = OPPONENTS[name_a]
+    char_b = OPPONENTS[name_b]
+    if ARGV.include?('--simulate')
+      puts JSON.pretty_generate(simulate_matchup(char_a, char_b))
+    else
+      seed = ARGV[2]&.to_i || 42
+      puts JSON.pretty_generate(single_battle(char_a, char_b, seed: seed))
+    end
   else
-    seed = ARGV[3]&.to_i || 42
-    puts JSON.pretty_generate(tournament(player, seed: seed))
+    # Player vs tournament mode
+    s, a, c = ARGV[0].to_i, ARGV[1].to_i, ARGV[2].to_i
+    player = make_character(str: s, agi: a, con: c)
+    if ARGV.include?('--simulate')
+      puts JSON.pretty_generate(simulate_tournament(player))
+    else
+      seed = ARGV[3]&.to_i || 42
+      puts JSON.pretty_generate(tournament(player, seed: seed))
+    end
   end
 end
