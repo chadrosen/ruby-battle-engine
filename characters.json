@@ -1,31 +1,29 @@
 {
-  "archetypes": {
-    "brawler": {
-      "description": "High damage output, minimal defense",
-      "weights": { "str": 0.6, "agi": 0.1, "con": 0.3 }
-    },
-    "sentinel": {
-      "description": "Highly evasive, difficult to damage",
-      "weights": { "str": 0.2, "agi": 0.6, "con": 0.2 }
-    },
-    "juggernaut": {
-      "description": "Massive health pool, moderate offense",
-      "weights": { "str": 0.25, "agi": 0.15, "con": 0.6 }
-    },
-    "assassin": {
-      "description": "Extreme damage, very fragile",
-      "weights": { "str": 0.75, "agi": 0.15, "con": 0.1 }
-    },
-    "paladin": {
-      "description": "Balanced across all stats",
-      "weights": { "str": 0.34, "agi": 0.33, "con": 0.33 }
-    }
+  "opponents": {
+    "brawler":    { "weights": { "str": 0.60, "agi": 0.10, "con": 0.30 } },
+    "sentinel":   { "weights": { "str": 0.20, "agi": 0.60, "con": 0.20 } },
+    "juggernaut": { "weights": { "str": 0.25, "agi": 0.15, "con": 0.60 } },
+    "assassin":   { "weights": { "str": 0.75, "agi": 0.15, "con": 0.10 } },
+    "paladin":    { "weights": { "str": 0.34, "agi": 0.33, "con": 0.33 } }
   },
+  "player_archetypes": [
+    "annihilator", "bastion", "behemoth", "berserker", "blade_dancer",
+    "blur", "bulwark", "bulwark_lord", "champion", "colossus",
+    "corsair", "crusader", "devastator", "destroyer", "dodge_master",
+    "duelist", "evader", "executioner", "fencer", "fortress",
+    "ghost", "heavy_guard", "hunter", "illusionist", "immortal",
+    "iron_wall", "iron_warrior", "ironclad", "knight", "marauder",
+    "mirage", "oath_keeper", "phantom", "predator", "ranger",
+    "ravager", "reaper", "shadow", "skirmisher", "slayer",
+    "specter", "stalker", "steel_wall", "stone_guard", "swashbuckler",
+    "templar", "titan", "vanguard", "warlord", "wraith"
+  ],
   "rules": {
     "hp_per_con": 20,
     "dr_per_agi": 0.5,
     "damage_variance": 1,
     "max_rounds": 300,
-    "total_points": 15
+    "player_points": 30,
+    "opponent_points": 15
   }
 }
