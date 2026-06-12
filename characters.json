@@ -1,0 +1,32 @@
+{
+    "opponents": {
+        "goblin": {
+            "level": 1,
+            "description": "A weak but aggressive creature. Good for learning the basics.",
+            "str": 3, "agi": 1, "con": 4
+        },
+        "iron_golem": {
+            "level": 2,
+            "description": "Heavily armored construct. High agility makes it hard to damage.",
+            "str": 5, "agi": 8, "con": 4
+        },
+        "berserker": {
+            "level": 3,
+            "description": "Enraged warrior dealing massive damage. Survival requires careful stat balance.",
+            "str": 12, "agi": 2, "con": 6
+        },
+        "champion": {
+            "level": 4,
+            "description": "A well-rounded fighter with no obvious weaknesses.",
+            "str": 9, "agi": 5, "con": 10
+        }
+    },
+    "rules": {
+        "hp_per_con": 20,
+        "dr_per_agi": 0.5,
+        "damage_variance": 1,
+        "max_rounds": 300,
+        "starting_points": 3,
+        "points_per_level": 10
+    }
+}
