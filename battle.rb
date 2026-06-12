@@ -109,7 +109,7 @@ def tournament(char_a, level:, seed: 42)
     break if winner != 'a'
   end
 
-  won_all = fights.length == level && fights.all? { |f| f['winner'] == 'a' }
+  won_all = fights.length == level && fights.all? { |f| f[:winner] == 'a' }
   {
     winner: won_all ? 'a' : 'b',
     fights_completed: fights.length,
