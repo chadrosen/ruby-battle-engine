@@ -1,14 +1,10 @@
 {
-  "player_archetypes": [
-    "annihilator", "bastion", "behemoth", "berserker", "blade_dancer",
-    "blur", "bulwark", "bulwark_lord", "champion", "colossus",
-    "corsair", "crusader", "devastator", "destroyer", "dodge_master",
-    "duelist", "evader", "executioner", "fencer", "fortress",
-    "ghost", "heavy_guard", "hunter", "illusionist", "immortal",
-    "iron_wall", "iron_warrior", "ironclad", "knight", "marauder",
-    "mirage", "oath_keeper", "phantom", "predator", "ranger",
-    "ravager", "reaper", "shadow", "skirmisher", "slayer",
-    "specter", "stalker", "steel_wall", "stone_guard", "swashbuckler",
-    "templar", "titan", "vanguard", "warlord", "wraith"
-  ]
+  "rules": {
+    "hp_per_con": 20,
+    "dr_per_agi": 0.5,
+    "damage_variance": 1,
+    "max_rounds": 300,
+    "player_points": 100,
+    "opponent_points": 15
+  }
 }

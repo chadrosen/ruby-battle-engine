@@ -1,6 +1,6 @@
 require 'json'
 
-PLAYER_POINTS   = 30
+PLAYER_POINTS   = 100
 OPPONENT_POINTS = 15
 MAX_ROUNDS      = 300
 HP_PER_CON      = 20
@@ -12,66 +12,6 @@ OPPONENT_ARCHETYPES = {
   'juggernaut' => { 'str' => 0.25, 'agi' => 0.15, 'con' => 0.60 },
   'assassin'   => { 'str' => 0.75, 'agi' => 0.15, 'con' => 0.10 },
   'paladin'    => { 'str' => 0.34, 'agi' => 0.33, 'con' => 0.33 },
-}.freeze
-
-# Hidden player archetype weights — names hint at stat profiles;
-# exact allocations must be inferred through testing.
-PLAYER_ARCHETYPES = {
-  # Berserker-type: high STR, low AGI, low CON
-  'berserker'    => { 'str' => 0.70, 'agi' => 0.10, 'con' => 0.20 },
-  'destroyer'    => { 'str' => 0.72, 'agi' => 0.08, 'con' => 0.20 },
-  'annihilator'  => { 'str' => 0.75, 'agi' => 0.10, 'con' => 0.15 },
-  'executioner'  => { 'str' => 0.68, 'agi' => 0.12, 'con' => 0.20 },
-  'ravager'      => { 'str' => 0.65, 'agi' => 0.15, 'con' => 0.20 },
-  'slayer'       => { 'str' => 0.70, 'agi' => 0.15, 'con' => 0.15 },
-  'devastator'   => { 'str' => 0.73, 'agi' => 0.07, 'con' => 0.20 },
-  'warlord'      => { 'str' => 0.65, 'agi' => 0.10, 'con' => 0.25 },
-  'marauder'     => { 'str' => 0.68, 'agi' => 0.07, 'con' => 0.25 },
-  'reaper'       => { 'str' => 0.72, 'agi' => 0.13, 'con' => 0.15 },
-  # Tank-type: low STR, low AGI, high CON
-  'ironclad'     => { 'str' => 0.15, 'agi' => 0.10, 'con' => 0.75 },
-  'colossus'     => { 'str' => 0.15, 'agi' => 0.08, 'con' => 0.77 },
-  'titan'        => { 'str' => 0.18, 'agi' => 0.07, 'con' => 0.75 },
-  'fortress'     => { 'str' => 0.12, 'agi' => 0.10, 'con' => 0.78 },
-  'bastion'      => { 'str' => 0.13, 'agi' => 0.12, 'con' => 0.75 },
-  'bulwark'      => { 'str' => 0.16, 'agi' => 0.09, 'con' => 0.75 },
-  'iron_wall'    => { 'str' => 0.14, 'agi' => 0.11, 'con' => 0.75 },
-  'behemoth'     => { 'str' => 0.18, 'agi' => 0.07, 'con' => 0.75 },
-  'immortal'     => { 'str' => 0.15, 'agi' => 0.10, 'con' => 0.75 },
-  'stone_guard'  => { 'str' => 0.15, 'agi' => 0.10, 'con' => 0.75 },
-  # Evasion-type: low STR, high AGI, low CON
-  'phantom'      => { 'str' => 0.20, 'agi' => 0.65, 'con' => 0.15 },
-  'shadow'       => { 'str' => 0.18, 'agi' => 0.67, 'con' => 0.15 },
-  'wraith'       => { 'str' => 0.17, 'agi' => 0.68, 'con' => 0.15 },
-  'specter'      => { 'str' => 0.20, 'agi' => 0.65, 'con' => 0.15 },
-  'mirage'       => { 'str' => 0.22, 'agi' => 0.63, 'con' => 0.15 },
-  'blur'         => { 'str' => 0.20, 'agi' => 0.67, 'con' => 0.13 },
-  'ghost'        => { 'str' => 0.18, 'agi' => 0.70, 'con' => 0.12 },
-  'evader'       => { 'str' => 0.22, 'agi' => 0.65, 'con' => 0.13 },
-  'dodge_master' => { 'str' => 0.20, 'agi' => 0.68, 'con' => 0.12 },
-  'illusionist'  => { 'str' => 0.18, 'agi' => 0.67, 'con' => 0.15 },
-  # Bruiser-type: high STR, low AGI, high CON
-  'crusader'     => { 'str' => 0.50, 'agi' => 0.08, 'con' => 0.42 },
-  'templar'      => { 'str' => 0.48, 'agi' => 0.10, 'con' => 0.42 },
-  'knight'       => { 'str' => 0.45, 'agi' => 0.12, 'con' => 0.43 },
-  'champion'     => { 'str' => 0.50, 'agi' => 0.10, 'con' => 0.40 },
-  'vanguard'     => { 'str' => 0.48, 'agi' => 0.08, 'con' => 0.44 },
-  'oath_keeper'  => { 'str' => 0.45, 'agi' => 0.10, 'con' => 0.45 },
-  'iron_warrior' => { 'str' => 0.52, 'agi' => 0.08, 'con' => 0.40 },
-  'heavy_guard'  => { 'str' => 0.48, 'agi' => 0.12, 'con' => 0.40 },
-  'steel_wall'   => { 'str' => 0.50, 'agi' => 0.05, 'con' => 0.45 },
-  'bulwark_lord' => { 'str' => 0.48, 'agi' => 0.07, 'con' => 0.45 },
-  # Skirmisher-type: balanced STR+AGI, low CON
-  'duelist'      => { 'str' => 0.40, 'agi' => 0.40, 'con' => 0.20 },
-  'fencer'       => { 'str' => 0.38, 'agi' => 0.42, 'con' => 0.20 },
-  'ranger'       => { 'str' => 0.40, 'agi' => 0.38, 'con' => 0.22 },
-  'skirmisher'   => { 'str' => 0.42, 'agi' => 0.38, 'con' => 0.20 },
-  'corsair'      => { 'str' => 0.38, 'agi' => 0.40, 'con' => 0.22 },
-  'hunter'       => { 'str' => 0.42, 'agi' => 0.35, 'con' => 0.23 },
-  'predator'     => { 'str' => 0.45, 'agi' => 0.35, 'con' => 0.20 },
-  'stalker'      => { 'str' => 0.40, 'agi' => 0.40, 'con' => 0.20 },
-  'swashbuckler' => { 'str' => 0.38, 'agi' => 0.42, 'con' => 0.20 },
-  'blade_dancer' => { 'str' => 0.42, 'agi' => 0.40, 'con' => 0.18 },
 }.freeze
 
 def allocate_points(weights, total)
@@ -88,13 +28,6 @@ end
 
 def make_character(str:, agi:, con:)
   { str: str, agi: agi, con: con, hp: con * HP_PER_CON, dr: agi * DR_PER_AGI }
-end
-
-def generate_player(archetype_name)
-  weights = PLAYER_ARCHETYPES[archetype_name]
-  raise "Unknown player archetype: #{archetype_name}" unless weights
-  stats = allocate_points(weights, PLAYER_POINTS)
-  make_character(str: stats['str'], agi: stats['agi'], con: stats['con'])
 end
 
 def generate_opponent(archetype_name)
@@ -135,22 +68,23 @@ def simulate_tournament(player, seeds: (1..100).to_a)
 end
 
 if __FILE__ == $0
-  unless ARGV.include?('--archetype')
+  if ARGV.length < 3
     puts "Usage:"
-    puts "  ruby battle.rb --archetype NAME [seed]"
-    puts "  ruby battle.rb --archetype NAME --simulate"
+    puts "  ruby battle.rb <str> <agi> <con> --simulate"
+    puts "  ruby battle.rb <str> <agi> <con> [seed]"
     puts ""
-    puts "Archetypes: #{PLAYER_ARCHETYPES.keys.join(', ')}"
+    puts "Player budget: #{PLAYER_POINTS} points (str + agi + con must equal #{PLAYER_POINTS}, min 1 each)"
+    puts "Opponents: #{OPPONENT_ARCHETYPES.keys.join(', ')}"
     exit 1
   end
 
-  name = ARGV[ARGV.index('--archetype') + 1]
-  player = generate_player(name)
+  s, a, c = ARGV[0].to_i, ARGV[1].to_i, ARGV[2].to_i
+  player = make_character(str: s, agi: a, con: c)
 
   if ARGV.include?('--simulate')
     puts JSON.pretty_generate(simulate_tournament(player))
   else
-    seed = ARGV.reject { |x| ['--archetype', '--simulate', name].include?(x) }.first&.to_i || 42
+    seed = ARGV[3]&.to_i || 42
     puts JSON.pretty_generate(tournament(player, seed: seed))
   end
 end
