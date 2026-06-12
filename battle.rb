@@ -7,6 +7,7 @@ DR_PER_AGI    = 0.5
 DAMAGE_CAP    = 40
 CRIT_CHANCE   = 0.10
 CRIT_CAP      = (DAMAGE_CAP * 1.5).floor  # 60
+DR_CAP_PCT    = 0.50  # DR can reduce at most 50% of any hit
 
 # Opponent stats loaded from compiled binary — not human-readable in the container.
 # Use `ruby battle.rb <opp1> <opp2> --simulate` to probe matchups instead.
@@ -21,7 +22,8 @@ end
 def attack(attacker, defender, rng)
   raw = attacker[:str]
   raw = rng.rand < CRIT_CHANCE ? [raw, CRIT_CAP].min : [raw, DAMAGE_CAP].min
-  [raw - defender[:dr] + rng.rand(-1..1), 0].max
+  effective_dr = [defender[:dr], raw * DR_CAP_PCT].min
+  [raw - effective_dr + rng.rand(-1..1), 0].max
 end
 
 def single_battle(char_a, char_b, seed: 42)
