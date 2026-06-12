@@ -1,11 +1,4 @@
 {
-  "opponents": {
-    "brawler":    { "weights": { "str": 0.60, "agi": 0.10, "con": 0.30 } },
-    "sentinel":   { "weights": { "str": 0.20, "agi": 0.60, "con": 0.20 } },
-    "juggernaut": { "weights": { "str": 0.25, "agi": 0.15, "con": 0.60 } },
-    "assassin":   { "weights": { "str": 0.75, "agi": 0.15, "con": 0.10 } },
-    "paladin":    { "weights": { "str": 0.34, "agi": 0.33, "con": 0.33 } }
-  },
   "player_archetypes": [
     "annihilator", "bastion", "behemoth", "berserker", "blade_dancer",
     "blur", "bulwark", "bulwark_lord", "champion", "colossus",
@@ -17,13 +10,5 @@
     "ravager", "reaper", "shadow", "skirmisher", "slayer",
     "specter", "stalker", "steel_wall", "stone_guard", "swashbuckler",
     "templar", "titan", "vanguard", "warlord", "wraith"
-  ],
-  "rules": {
-    "hp_per_con": 20,
-    "dr_per_agi": 0.5,
-    "damage_variance": 1,
-    "max_rounds": 300,
-    "player_points": 30,
-    "opponent_points": 15
-  }
+  ]
 }

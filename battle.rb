@@ -1,16 +1,21 @@
 require 'json'
 
-MAX_ROUNDS = 300
-HP_PER_CON = 20
-DR_PER_AGI = 0.5
+PLAYER_POINTS   = 30
+OPPONENT_POINTS = 15
+MAX_ROUNDS      = 300
+HP_PER_CON      = 20
+DR_PER_AGI      = 0.5
 
-CHARS_FILE = File.join(__dir__, 'characters.json')
-CHARS = JSON.parse(File.read(CHARS_FILE))
-OPPONENTS = CHARS['opponents']
-RULES = CHARS['rules']
+OPPONENT_ARCHETYPES = {
+  'brawler'    => { 'str' => 0.60, 'agi' => 0.10, 'con' => 0.30 },
+  'sentinel'   => { 'str' => 0.20, 'agi' => 0.60, 'con' => 0.20 },
+  'juggernaut' => { 'str' => 0.25, 'agi' => 0.15, 'con' => 0.60 },
+  'assassin'   => { 'str' => 0.75, 'agi' => 0.15, 'con' => 0.10 },
+  'paladin'    => { 'str' => 0.34, 'agi' => 0.33, 'con' => 0.33 },
+}.freeze
 
-# Hidden player archetype weights — not exposed in characters.json.
-# Names hint at stat profiles; exact stats must be inferred through testing.
+# Hidden player archetype weights — names hint at stat profiles;
+# exact allocations must be inferred through testing.
 PLAYER_ARCHETYPES = {
   # Berserker-type: high STR, low AGI, low CON
   'berserker'    => { 'str' => 0.70, 'agi' => 0.10, 'con' => 0.20 },
@@ -85,33 +90,33 @@ def make_character(str:, agi:, con:)
   { str: str, agi: agi, con: con, hp: con * HP_PER_CON, dr: agi * DR_PER_AGI }
 end
 
-def generate_player_character(archetype_name)
+def generate_player(archetype_name)
   weights = PLAYER_ARCHETYPES[archetype_name]
   raise "Unknown player archetype: #{archetype_name}" unless weights
-  stats = allocate_points(weights, RULES['player_points'])
+  stats = allocate_points(weights, PLAYER_POINTS)
   make_character(str: stats['str'], agi: stats['agi'], con: stats['con'])
 end
 
-def generate_opponent_character(archetype_name)
-  arch = OPPONENTS[archetype_name]
-  raise "Unknown opponent: #{archetype_name}" unless arch
-  stats = allocate_points(arch['weights'], RULES['opponent_points'])
+def generate_opponent(archetype_name)
+  weights = OPPONENT_ARCHETYPES[archetype_name]
+  raise "Unknown opponent archetype: #{archetype_name}" unless weights
+  stats = allocate_points(weights, OPPONENT_POINTS)
   make_character(str: stats['str'], agi: stats['agi'], con: stats['con'])
 end
 
-def tournament(char_a, seed: 42)
-  opponents = OPPONENTS.keys.map { |name| generate_opponent_character(name) }
+def tournament(player, seed: 42)
+  opponents = OPPONENT_ARCHETYPES.keys.map { |name| generate_opponent(name) }
   rng = Random.new(seed)
   bracket = opponents.shuffle(random: rng)
-  a_hp = char_a[:hp].to_f
+  a_hp = player[:hp].to_f
   fights = []
   bracket.each do |opp|
     b_hp = opp[:hp].to_f
     rounds = 0
     while a_hp > 0 && b_hp > 0 && rounds < MAX_ROUNDS
       rounds += 1
-      a_takes = [opp[:str] - char_a[:dr] + rng.rand(-1..1), 0].max
-      b_takes = [char_a[:str] - opp[:dr] + rng.rand(-1..1), 0].max
+      a_takes = [opp[:str] - player[:dr] + rng.rand(-1..1), 0].max
+      b_takes = [player[:str] - opp[:dr] + rng.rand(-1..1), 0].max
       a_hp -= a_takes
       b_hp -= b_takes
     end
@@ -123,31 +128,29 @@ def tournament(char_a, seed: 42)
   { winner: won_all ? 'player' : 'opponent', fights_completed: fights.length, final_player_hp: a_hp.round(1) }
 end
 
-def simulate_tournament(char_a, seeds: (1..100).to_a)
-  results = seeds.map { |s| tournament(char_a, seed: s) }
+def simulate_tournament(player, seeds: (1..100).to_a)
+  results = seeds.map { |s| tournament(player, seed: s) }
   wins = results.count { |r| r[:winner] == 'player' }
   { simulations: seeds.size, wins: wins, win_pct: (wins.to_f / seeds.size * 100).round(1) }
 end
 
 if __FILE__ == $0
-  if ARGV.include?('--archetype')
-    name = ARGV[ARGV.index('--archetype') + 1]
-    char_a = generate_player_character(name)
-    if ARGV.include?('--simulate')
-      puts JSON.pretty_generate(simulate_tournament(char_a))
-    else
-      seed = ARGV.reject { |x| ['--archetype', '--tournament', '--simulate', name].include?(x) }.first&.to_i || 42
-      puts JSON.pretty_generate(tournament(char_a, seed: seed))
-    end
-  elsif ARGV.length >= 6
-    a = make_character(str: ARGV[0].to_i, agi: ARGV[1].to_i, con: ARGV[2].to_i)
-    b = make_character(str: ARGV[3].to_i, agi: ARGV[4].to_i, con: ARGV[5].to_i)
-    seed = ARGV[6]&.to_i || 42
-    puts JSON.pretty_generate(battle(a, b, seed: seed))
-  else
+  unless ARGV.include?('--archetype')
     puts "Usage:"
-    puts "  ruby battle.rb --archetype NAME --tournament [seed]"
-    puts "  ruby battle.rb --archetype NAME --tournament --simulate"
+    puts "  ruby battle.rb --archetype NAME [seed]"
+    puts "  ruby battle.rb --archetype NAME --simulate"
+    puts ""
+    puts "Archetypes: #{PLAYER_ARCHETYPES.keys.join(', ')}"
     exit 1
+  end
+
+  name = ARGV[ARGV.index('--archetype') + 1]
+  player = generate_player(name)
+
+  if ARGV.include?('--simulate')
+    puts JSON.pretty_generate(simulate_tournament(player))
+  else
+    seed = ARGV.reject { |x| ['--archetype', '--simulate', name].include?(x) }.first&.to_i || 42
+    puts JSON.pretty_generate(tournament(player, seed: seed))
   end
 end
