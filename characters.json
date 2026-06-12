@@ -5,6 +5,6 @@
     "damage_variance": 1,
     "max_rounds": 300,
     "player_points": 100,
-    "opponent_points": 15
+    "opponent_points": 60
   }
 }

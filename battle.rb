@@ -1,7 +1,7 @@
 require 'json'
 
 PLAYER_POINTS   = 100
-OPPONENT_POINTS = 15
+OPPONENT_POINTS = 60
 MAX_ROUNDS      = 300
 HP_PER_CON      = 20
 DR_PER_AGI      = 0.5
