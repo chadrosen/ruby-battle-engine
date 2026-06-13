@@ -1,6 +1,6 @@
 require 'json'
 
-PLAYER_POINTS = 100
+PLAYER_POINTS = 80
 MAX_ROUNDS    = 300
 HP_PER_CON    = 20
 DR_PER_AGI    = 0.5
