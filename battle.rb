@@ -1,12 +1,12 @@
 require 'json'
 
-PLAYER_POINTS = 90
+PLAYER_POINTS = 100
+OPPONENT_POINTS = 60
 MAX_ROUNDS    = 300
 HP_PER_CON    = 20
 DR_PER_AGI    = 0.5
-DAMAGE_CAP    = 40
-CRIT_CHANCE   = 0.10
-CRIT_CAP      = (DAMAGE_CAP * 1.5).floor  # 60
+CRIT_CHANCE   = 0.10  # 10% chance of 1.5x damage
+CRIT_MULT     = 1.5
 DR_CAP_PCT    = 0.50  # DR can reduce at most 50% of any hit
 
 # Opponent stats loaded from compiled binary — not human-readable in the container.
@@ -20,8 +20,7 @@ def make_character(str:, agi:, con:)
 end
 
 def attack(attacker, defender, rng)
-  raw = attacker[:str]
-  raw = rng.rand < CRIT_CHANCE ? [raw, CRIT_CAP].min : [raw, DAMAGE_CAP].min
+  raw = rng.rand < CRIT_CHANCE ? (attacker[:str] * CRIT_MULT).floor : attacker[:str]
   effective_dr = [defender[:dr], raw * DR_CAP_PCT].min
   [raw - effective_dr + rng.rand(-1..1), 0].max
 end
